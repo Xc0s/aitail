@@ -1,0 +1,1 @@
+#The logic to be executed when waste is logged in the simulated store
