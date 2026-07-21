@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="(AI)Tail is an experimental AI orchestration layer for autonomous retail operations, policy-constrained agents, and verifiable onchain execution." />
+  <title>(AI)Tail — AI Orchestration for Autonomous Retail</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-soft: #111114;
+      --panel: rgba(22, 21, 20, 0.78);
+      --panel-strong: #171614;
+      --line: rgba(255, 222, 168, 0.14);
+      --text: #f4efe6;
+      --muted: #a39c91;
+      --accent: #f4b83f;
+      --accent-2: #ffd36f;
+      --warn: #f4b83f;
+      --success: #63d38b;
+      --danger: #ff626d;
+      --chain: #63a7ff;
+      --radius: 18px;
+      --shadow: 0 24px 80px rgba(0,0,0,.30);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 78% 14%, rgba(244, 184, 63, .12), transparent 28%),
+        radial-gradient(circle at 18% 42%, rgba(255, 211, 111, .055), transparent 22%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+      z-index: 50;
+    }
+
+    .container { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(18px);
+      background: rgba(9,9,11,.78);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 760; letter-spacing: -.03em; }
+    .mark {
+      width: 35px; height: 35px; border-radius: 10px;
+      display: grid; place-items: center;
+      border: 1px solid rgba(244,184,63,.38);
+      background: linear-gradient(145deg, rgba(244,184,63,.14), rgba(244,184,63,.025));
+      box-shadow: inset 0 0 22px rgba(244,184,63,.06);
+      font-size: 12px;
+      color: var(--accent);
+    }
+    .brand span { color: var(--muted); font-weight: 540; }
+    .brand > div:last-child { color: var(--text); }
+
+    .nav-links { display: flex; gap: 26px; color: var(--muted); font-size: 14px; }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      min-height: 46px; padding: 0 17px; border-radius: 12px;
+      border: 1px solid rgba(244,184,63,.28);
+      background: rgba(244,184,63,.08);
+      color: var(--text);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); border-color: rgba(244,184,63,.55); background: rgba(244,184,63,.12); }
+    .btn.primary { background: var(--accent); color: #171107; border-color: var(--accent); font-weight: 760; }
+    .btn.primary:hover { background: var(--accent-2); }
+
+    .hero { min-height: 88vh; display: grid; align-items: center; padding: 84px 0 62px; }
+    .hero-grid { display: grid; grid-template-columns: 1.06fr .94fr; gap: 62px; align-items: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--accent); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+    .pulse { width: 8px; height: 8px; border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 7px rgba(244,184,63,.07); }
+
+    h1 { font-size: clamp(54px, 8vw, 104px); line-height: .91; letter-spacing: -.075em; margin: 24px 0 26px; max-width: 820px; }
+    h1 .ghost { color: transparent; -webkit-text-stroke: 1px rgba(244,239,230,.42); }
+    .hero-copy { max-width: 640px; color: #c6beb1; font-size: clamp(18px, 2.1vw, 22px); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .hero-note { margin-top: 23px; color: #817a71; font-size: 13px; }
+
+    .system-shell {
+      position: relative;
+      border: 1px solid rgba(244,184,63,.14);
+      background: linear-gradient(165deg, rgba(24,22,19,.90), rgba(9,9,11,.84));
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .system-shell:before {
+      content: ""; position: absolute; inset: -1px;
+      background: linear-gradient(120deg, rgba(244,184,63,.18), transparent 22%, transparent 70%, rgba(244,184,63,.08));
+      pointer-events: none;
+    }
+    .window-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; color: var(--muted); font-size: 12px; }
+    .dots { display: flex; gap: 7px; }
+    .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(244,239,230,.18); }
+    .status { display: flex; gap: 7px; align-items: center; color: var(--success); }
+    .status i { width: 7px; height: 7px; background: var(--success); border-radius: 50%; box-shadow: 0 0 12px rgba(99,211,139,.55); }
+
+    .flow { display: grid; gap: 11px; }
+    .node {
+      display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center;
+      border: 1px solid var(--line); background: rgba(255,255,255,.018); border-radius: 14px; padding: 13px;
+      transition: .2s ease;
+    }
+    .node.active { border-color: rgba(244,184,63,.40); background: rgba(244,184,63,.06); }
+    .node-icon { width: 38px; height: 38px; display:grid; place-items:center; border-radius: 11px; background: #171512; color: var(--accent); border: 1px solid var(--line); font-size: 16px; }
+    .node strong { display:block; font-size: 14px; }
+    .node small { color: var(--muted); font-size: 12px; }
+    .tag { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: rgba(244,184,63,.06); padding: 5px 7px; border-radius: 7px; }
+    .connector { width: 1px; height: 12px; background: linear-gradient(var(--accent), transparent); margin-left: 31px; opacity: .48; }
+    .terminal { margin-top: 15px; border-radius: 14px; background: #080808; border: 1px solid rgba(255,255,255,.06); padding: 15px; color: #aaa298; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 113px; }
+    .terminal .ok { color: var(--success); }
+    .terminal .warn { color: var(--warn); }
+
+    section { padding: 112px 0; }
+    .section-kicker { color: var(--accent); text-transform: uppercase; letter-spacing: .14em; font-size: 12px; margin-bottom: 14px; }
+    h2 { font-size: clamp(38px, 5vw, 62px); line-height: 1; letter-spacing: -.055em; margin: 0 0 22px; }
+    .section-intro { max-width: 720px; color: var(--muted); font-size: 18px; }
+
+    .problem-grid { margin-top: 54px; display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .card { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 25px; box-shadow: inset 0 1px rgba(255,255,255,.025); }
+    .card .num { color: rgba(244,184,63,.42); font: 13px ui-monospace, monospace; margin-bottom: 42px; }
+    .card h3 { font-size: 21px; letter-spacing: -.025em; margin: 0 0 10px; }
+    .card p { color: var(--muted); margin: 0; }
+
+    .architecture { background: linear-gradient(180deg, transparent, rgba(244,184,63,.025), transparent); }
+    .arch-board { margin-top: 52px; border: 1px solid var(--line); border-radius: 24px; padding: 34px; background: rgba(8,8,9,.62); overflow-x: auto; }
+    .arch-flow { min-width: 930px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; align-items: center; }
+    .arch-node { min-height: 132px; border: 1px solid rgba(244,184,63,.14); border-radius: 15px; padding: 16px; background: var(--panel-strong); position: relative; }
+    .arch-node:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: rgba(244,184,63,.48); }
+    .arch-node .mini { color: var(--accent); font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; }
+    .arch-node strong { display: block; margin: 8px 0 5px; font-size: 15px; }
+    .arch-node p { margin:0; font-size:12px; color:var(--muted); }
+    .arch-caption { margin-top: 17px; display:flex; justify-content:space-between; gap:20px; color:#777168; font-size:12px; }
+
+    .demo-layout { margin-top: 54px; display:grid; grid-template-columns:.82fr 1.18fr; gap:18px; align-items:stretch; }
+    .scenario-list { display:grid; gap:10px; }
+    .scenario { text-align:left; padding:18px; border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.015); color:var(--text); cursor:pointer; }
+    .scenario.active { background:rgba(244,184,63,.07); border-color:rgba(244,184,63,.38); }
+    .scenario small { color:var(--accent); text-transform:uppercase; letter-spacing:.1em; }
+    .scenario strong { display:block; margin:7px 0 4px; }
+    .scenario span { color:var(--muted); font-size:13px; }
+    .console { border:1px solid var(--line); background:#080809; border-radius:18px; padding:20px; font:13px/1.7 ui-monospace, monospace; overflow:hidden; }
+    .console-head { display:flex; justify-content:space-between; color:#777168; margin-bottom:18px; font-size:11px; text-transform:uppercase; letter-spacing:.1em; }
+    .log-line { opacity:0; transform:translateY(6px); animation:logIn .35s forwards; }
+    @keyframes logIn { to { opacity:1; transform:none; } }
+    .console .green { color:var(--success); } .console .amber { color:var(--warn); } .console .red { color:var(--danger); } .console .blue { color:var(--chain); } .console .dim { color:#8b847a; }
+
+    .research-grid { margin-top:52px; display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .research-item { padding:23px 0; border-top:1px solid var(--line); display:grid; grid-template-columns:34px 1fr; gap:15px; }
+    .research-item span { color:rgba(244,184,63,.45); font:12px ui-monospace,monospace; }
+    .research-item strong { display:block; margin-bottom:7px; }
+    .research-item p { margin:0; color:var(--muted); }
+
+    .roadmap { display:grid; grid-template-columns:.72fr 1.28fr; gap:60px; }
+    .timeline { border-left:1px solid rgba(244,184,63,.22); padding-left:25px; display:grid; gap:32px; }
+    .milestone { position:relative; }
+    .milestone:before { content:""; position:absolute; left:-31px; top:7px; width:11px; height:11px; border-radius:50%; background:var(--bg); border:2px solid var(--accent); }
+    .milestone small { color:var(--accent); text-transform:uppercase; letter-spacing:.1em; }
+    .milestone h3 { margin:5px 0 8px; }
+    .milestone p { color:var(--muted); margin:0; }
+
+    .cta-wrap { border:1px solid rgba(244,184,63,.18); background:linear-gradient(135deg,rgba(141,247,191,.075),rgba(141,247,191,.015)); border-radius:28px; padding:58px; position:relative; overflow:hidden; }
+    .cta-wrap:after { content:"(AI)"; position:absolute; right:-20px; bottom:-75px; font-weight:800; font-size:190px; letter-spacing:-.09em; color:rgba(244,184,63,.025); }
+    .cta-wrap p { max-width:680px; color:#b9b0a4; font-size:18px; }
+
+    footer { padding:36px 0 58px; border-top:1px solid var(--line); color:#777168; font-size:13px; }
+    .footer-inner { display:flex; justify-content:space-between; gap:20px; }
+
+    @media (max-width: 900px) {
+      .nav-links { display:none; }
+      .hero-grid, .roadmap, .demo-layout { grid-template-columns:1fr; }
+      .hero { min-height:auto; }
+      .problem-grid { grid-template-columns:1fr; }
+      .research-grid { grid-template-columns:1fr; }
+      .system-shell { margin-top:22px; }
+      section { padding:82px 0; }
+      .cta-wrap { padding:34px; }
+    }
+
+    @media (max-width: 560px) {
+      .container { width:min(100% - 26px,1160px); }
+      .nav-inner { height:64px; }
+      .nav-inner > .btn { display:none; }
+      h1 { font-size:56px; }
+      .hero { padding-top:56px; }
+      .hero-actions { flex-direction:column; align-items:stretch; }
+      .node { grid-template-columns:38px 1fr; }
+      .tag { display:none; }
+      .arch-board { padding:20px; }
+      .footer-inner { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+<div class="noise"></div>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><div class="mark">AI</div><div>(AI)Tail <span>/ orchestration lab</span></div></a>
+    <div class="nav-links">
+      <a href="#vision">Vision</a><a href="#architecture">Architecture</a><a href="#demo">Demo</a><a href="#research">Research</a><a href="#roadmap">Roadmap</a>
+    </div>
+    <a class="btn" href="#contact">Follow the build ↗</a>
+  </div>
+</nav>
+
+<main id="top">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Experimental orchestration infrastructure</div>
+        <h1>AI agents that <span class="ghost">act</span> within boundaries.</h1>
+        <p class="hero-copy">(AI)Tail is a working exploration of autonomous retail operations, where agents observe state, reason over events, use constrained tools, and move toward verifiable onchain execution.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#demo">Explore the system →</a>
+          <a class="btn" href="#architecture">View architecture</a>
+        </div>
+        <div class="hero-note">Built from a retail operations problem outward: inventory, events, purchasing, permissions, auditability, coordination.</div>
+      </div>
+
+      <div class="system-shell">
+        <div class="window-bar"><div class="dots"><i></i><i></i><i></i></div><div>orchestrator.runtime</div><div class="status"><i></i> LIVE</div></div>
+        <div class="flow">
+          <div class="node"><div class="node-icon">↯</div><div><strong>Store Event Stream</strong><small>sale_event • SKU-1042 • qty -3</small></div><div class="tag">observed</div></div>
+          <div class="connector"></div>
+          <div class="node active"><div class="node-icon">⌁</div><div><strong>Inventory Manager Agent</strong><small>Threshold crossed. Evaluating reorder policy.</small></div><div class="tag">reasoning</div></div>
+          <div class="connector"></div>
+          <div class="node"><div class="node-icon">✓</div><div><strong>Constrained Tool Action</strong><small>create_purchase_order • supplier_02</small></div><div class="tag">authorized</div></div>
+          <div class="connector"></div>
+          <div class="node"><div class="node-icon">◇</div><div><strong>Verification Layer</strong><small>policy proof • approval • audit trail</small></div><div class="tag">roadmap</div></div>
+        </div>
+        <div class="terminal" id="heroTerminal"><span class="dim">[20:14:08]</span> ingest event <span class="ok">SALE_COMPLETED</span><br><span class="dim">[20:14:08]</span> inventory SKU-1042 = 7<br><span class="dim">[20:14:09]</span> threshold policy = <span class="warn">TRIGGERED</span><br><span class="dim">[20:14:10]</span> agent action → <span class="ok">CREATE_PO</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="vision">
+    <div class="container">
+      <div class="section-kicker">01 / Vision</div>
+      <h2>Autonomy needs architecture.</h2>
+      <p class="section-intro">Giving an AI model access to a tool is easy. Building a system in which an agent can act independently without escaping policy, authority, or accountability is the harder problem.</p>
+      <div class="problem-grid">
+        <div class="card"><div class="num">01</div><h3>Agents need boundaries</h3><p>Permissions, thresholds, approved actions, escalation rules, and human checkpoints should exist outside the model’s improvisation.</p></div>
+        <div class="card"><div class="num">02</div><h3>Operations need state</h3><p>Agents need reliable awareness of inventory, purchase orders, events, suppliers, and prior decisions before they can act coherently.</p></div>
+        <div class="card"><div class="num">03</div><h3>Actions need proof</h3><p>The long-term architecture moves critical approvals and execution constraints toward independently verifiable policy and onchain audit trails.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="architecture" id="architecture">
+    <div class="container">
+      <div class="section-kicker">02 / Architecture</div>
+      <h2>From physical event to verified action.</h2>
+      <p class="section-intro">The project begins as a simulated retail environment and evolves toward an orchestration layer where agent intent can be checked before economically meaningful actions execute.</p>
+      <div class="arch-board">
+        <div class="arch-flow">
+          <div class="arch-node"><div class="mini">Input</div><strong>Retail State</strong><p>Sales, inventory, supplier status, purchase orders.</p></div>
+          <div class="arch-node"><div class="mini">Event layer</div><strong>Store Events</strong><p>Normalized events create a stream of operational change.</p></div>
+          <div class="arch-node"><div class="mini">Orchestrator</div><strong>LangGraph</strong><p>Stateful routing coordinates agents, tools, and decisions.</p></div>
+          <div class="arch-node"><div class="mini">Agent</div><strong>Policy-aware reasoning</strong><p>Agents inspect state and select from constrained capabilities.</p></div>
+          <div class="arch-node"><div class="mini">Execution</div><strong>Structured Tools</strong><p>Create PO, update status, adjust inventory, request approval.</p></div>
+          <div class="arch-node"><div class="mini">Future layer</div><strong>Onchain Verification</strong><p>Intent, permissions, smart accounts, approvals, auditability.</p></div>
+        </div>
+        <div class="arch-caption"><span>Current stack: Python • SQLite • Pydantic • LangChain/LangGraph</span><span>Target environment: Ethereum L2 / Base-compatible execution</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="container">
+      <div class="section-kicker">03 / Demonstration</div>
+      <h2>Watch the orchestration think in events.</h2>
+      <p class="section-intro">This interface previews the core behavior of the project. Select a scenario to see how operational state becomes an agent decision rather than a free-form chatbot response.</p>
+      <div class="demo-layout">
+        <div class="scenario-list">
+          <button class="scenario active" data-scenario="sale"><small>Scenario A</small><strong>Inventory threshold crossed</strong><span>A sale reduces stock below its reorder point.</span></button>
+          <button class="scenario" data-scenario="approval"><small>Scenario B</small><strong>Purchase order requires approval</strong><span>Agent intent exceeds an autonomous spending boundary.</span></button>
+          <button class="scenario" data-scenario="supplier"><small>Scenario C</small><strong>Supplier state changes</strong><span>A pending PO cannot proceed with the preferred supplier.</span></button>
+        </div>
+        <div class="console" id="demoConsole"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="research">
+    <div class="container">
+      <div class="section-kicker">04 / Research threads</div>
+      <h2>The questions behind the code.</h2>
+      <p class="section-intro">(AI)Tail is also a research surface for the emerging boundary between probabilistic AI reasoning and deterministic economic constraints.</p>
+      <div class="research-grid">
+        <div class="research-item"><span>01</span><div><strong>Agent transaction intent</strong><p>How should an agent express what it intends to do before execution occurs?</p></div></div>
+        <div class="research-item"><span>02</span><div><strong>Policy verification</strong><p>Which rules belong in code, in an orchestration graph, or in a smart contract?</p></div></div>
+        <div class="research-item"><span>03</span><div><strong>Human-in-the-loop authority</strong><p>When does autonomy stop and explicit approval become mandatory?</p></div></div>
+        <div class="research-item"><span>04</span><div><strong>Agent identity & smart accounts</strong><p>How can an agent transact without collapsing identity, custody, and authorization into one key?</p></div></div>
+        <div class="research-item"><span>05</span><div><strong>Multi-agent coordination</strong><p>How should specialized agents negotiate shared state and competing objectives?</p></div></div>
+        <div class="research-item"><span>06</span><div><strong>Onchain auditability</strong><p>What must be publicly verifiable, and what should remain private operational data?</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <div class="container roadmap">
+      <div>
+        <div class="section-kicker">05 / Roadmap</div>
+        <h2>Build the agent. Then harden the boundary.</h2>
+        <p class="section-intro">The project deliberately progresses from simulated retail logic into progressively stronger guarantees around agent execution.</p>
+      </div>
+      <div class="timeline">
+        <div class="milestone"><small>Now</small><h3>Operational simulation</h3><p>Event generator, inventory state, purchase-order workflows, structured agent tools, and LangGraph orchestration.</p></div>
+        <div class="milestone"><small>Next</small><h3>Observable multi-agent runtime</h3><p>Graph monitoring, richer agent state, persistent audit logging, human approval pathways, and an operator dashboard.</p></div>
+        <div class="milestone"><small>Then</small><h3>Transaction-intent policy layer</h3><p>Formalize agent intent before execution and evaluate it against deterministic permissions and spending constraints.</p></div>
+        <div class="milestone"><small>Target</small><h3>Base-compatible verification</h3><p>Explore smart accounts, onchain approvals, attestable actions, agent payments, and verifiable execution boundaries on an Ethereum L2.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <div class="cta-wrap">
+        <div class="section-kicker">Open build / evolving research</div>
+        <h2>A retail problem became an autonomy problem.</h2>
+        <p>(AI)Tail is being built from first-hand retail operations experience into a broader question: how do we let AI agents participate in economic systems without asking humans to blindly trust the model?</p>
+        <div class="hero-actions"><a class="btn primary" href="#top">Enter the architecture ↑</a><a class="btn" href="https://www.linkedin.com/in/cymaticist/" target="_blank" rel="noopener noreferrer">Connect on LinkedIn ↗</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="container footer-inner"><span>© 2026 (AI)Tail — AI Orchestration Lab</span><span>Retail systems • Agent orchestration • Verifiable execution</span></div></footer>
+
+<script>
+  const scenarios = {
+    sale: [
+      ['20:14:08','EVENT','sale_event received: SKU-1042 / qty 3'],
+      ['20:14:08','STATE','inventory_on_hand: 10 → 7'],
+      ['20:14:09','POLICY','reorder_threshold: 8','amber'],
+      ['20:14:09','AGENT','inventory_manager evaluates SKU-1042'],
+      ['20:14:10','TOOL','create_purchase_order(sku=SKU-1042, qty=24)','green'],
+      ['20:14:10','RESULT','PO-0081 created / status=PENDING','green']
+    ],
+    approval: [
+      ['20:22:01','EVENT','reorder request generated: SKU-2020'],
+      ['20:22:02','AGENT','recommended order value: $1,240'],
+      ['20:22:02','POLICY','autonomous_spend_limit: $500','amber'],
+      ['20:22:03','DECISION','execution blocked by policy boundary','amber'],
+      ['20:22:03','ACTION','request_human_approval(PO-0082)','green'],
+      ['20:22:04','STATE','waiting_for_approval=true']
+    ],
+    supplier: [
+      ['20:31:44','EVENT','supplier_02 status changed: unavailable','amber'],
+      ['20:31:45','STATE','open PO references supplier_02'],
+      ['20:31:45','AGENT','evaluate alternate supplier candidates'],
+      ['20:31:46','POLICY','substitution requires price delta < 8%'],
+      ['20:31:47','DECISION','supplier_04 eligible / delta 4.6%','green'],
+      ['20:31:47','ACTION','propose PO supplier reassignment','green']
+    ]
+  };
+
+  const consoleEl = document.getElementById('demoConsole');
+  function renderScenario(name) {
+    const rows = scenarios[name];
+    consoleEl.innerHTML = '<div class="console-head"><span>runtime event log</span><span>simulation / local</span></div>' + rows.map((r,i) =>
+      `<div class="log-line ${r[3] || ''}" style="animation-delay:${i*90}ms"><span class="dim">[${r[0]}]</span> ${r[1].padEnd(8,' ')} ${r[2]}</div>`
+    ).join('');
+  }
+  renderScenario('sale');
+  document.querySelectorAll('.scenario').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.scenario').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderScenario(btn.dataset.scenario);
+  }));
+</script>
+</body>
+</html>
